@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mmousli <mmousli@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/20 00:00:00 by mmousli           #+#    #+#             */
-/*   Updated: 2026/01/21 00:39:00 by mmousli          ###   ########.fr       */
+/*   Created: 2026/01/21 01:09:07 by mmousli           #+#    #+#             */
+/*   Updated: 2026/01/23 15:49:56 by mmousli          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,21 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+static volatile sig_atomic_t	g_ack = 0;
+
+static void	ack_handler(int sig)
+{
+	(void)sig;
+	g_ack = 1;
+}
+
+static void	wait_ack(void)
+{
+	while (!g_ack)
+		pause();
+	g_ack = 0;
+}
 
 static int	ft_atoi_pid(const char *s)
 {
@@ -52,15 +67,35 @@ static void	send_char(int pid, unsigned char c)
 		if ((c >> bit) & 1)
 		{
 			if (kill(pid, SIGUSR2) == -1)
+			{
+				write(2, "Error: kill failed\n", 19);
 				exit(1);
+			}
 		}
 		else
 		{
 			if (kill(pid, SIGUSR1) == -1)
+			{
+				write(2, "Error: kill failed\n", 19);
 				exit(1);
+			}
 		}
-		usleep(500);
+		wait_ack();
 		bit--;
+	}
+}
+
+static void	setup_client_signals(void)
+{
+	struct sigaction	sa;
+
+	sa.sa_handler = ack_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (sigaction(SIGUSR1, &sa, NULL) == -1)
+	{
+		write(2, "Error: sigaction failed\n", 24);
+		exit(1);
 	}
 }
 
@@ -75,10 +110,16 @@ int	main(int argc, char **argv)
 		write(2, "Usage: ./client <server_pid> <message>\n", 39);
 		return (1);
 	}
+	setup_client_signals();
 	pid = ft_atoi_pid(argv[1]);
 	if (pid <= 0)
 	{
 		write(2, "Error: invalid PID\n", 19);
+		return (1);
+	}
+	if (kill(pid, 0) == -1)
+	{
+		write(2, "Error: server PID not reachable\n", 32);
 		return (1);
 	}
 	msg = argv[2];
