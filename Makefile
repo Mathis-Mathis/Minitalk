@@ -6,7 +6,7 @@
 #    By: mmousli <mmousli@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/20 18:41:31 by mmousli           #+#    #+#              #
-#    Updated: 2026/01/21 00:39:04 by mmousli          ###   ########.fr        #
+#    Updated: 2026/02/09 16:56:13 by mmousli          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,11 +22,14 @@ BUILD_DIR	:= build
 
 SERVER_SRCS	:= \
 	src/server.c \
-	src/utils/ft_putnbr.c
+	src/utils/ft_putnbr.c \
+	src/utils/ft_atoi.c
 
 CLIENT_SRCS	:= \
 	src/client.c \
-	src/utils/ft_putnbr.c
+	src/utils/ft_putnbr.c \
+	src/utils/ft_atoi.c
+
 
 
 SERVER_OBJS	:= $(SERVER_SRCS:src/%.c=$(BUILD_DIR)/%.o)

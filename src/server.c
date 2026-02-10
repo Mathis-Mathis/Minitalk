@@ -5,75 +5,61 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mmousli <mmousli@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/21 01:10:00 by mmousli           #+#    #+#             */
-/*   Updated: 2026/01/23 15:50:13 by mmousli          ###   ########.fr       */
+/*   Created: 2026/02/10 09:37:21 by mmousli           #+#    #+#             */
+/*   Updated: 2026/02/10 09:37:53 by mmousli          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <signal.h>
-#include <unistd.h>
 #include "minitalk.h"
 
-static void	flush_buf(char *buf, int *idx)
+static char	bits_to_char(int bits[8])
 {
-	if (*idx > 0)
+	char	c;
+	int		i;
+
+	c = 0;
+	i = 0;
+	while (i < 8)
 	{
-		write(1, buf, *idx);
-		*idx = 0;
+		c = c * 2 + bits[i];
+		i++;
 	}
+	return (c);
 }
 
-static void	handle_signal(int sig, siginfo_t *info, void *context)
+static void	handler(int signum, siginfo_t *info, void *context)
 {
-	static unsigned char	c = 0;
-	static int				bit = 0;
-	static pid_t			client_pid = 0;
-	static char				buf[1024];
-	static int				idx = 0;
+	static int	bits[8];
+	static int	index = 0;
+	char		c;
 
 	(void)context;
-	if (client_pid != info->si_pid)
+	if (signum == SIGUSR1)
+		bits[index] = 0;
+	else if (signum == SIGUSR2)
+		bits[index] = 1;
+	index++;
+	if (index == 8)
 	{
-		client_pid = info->si_pid;
-		c = 0;
-		bit = 0;
-		idx = 0;
-	}
-	if (sig == SIGUSR2)
-		c |= (1 << (7 - bit));
-	bit++;
-	if (bit == 8)
-	{
+		c = bits_to_char(bits);
 		if (c == '\0')
-		{
-			buf[idx++] = '\n';
-			flush_buf(buf, &idx);
-		}
+			write(1, "\n", 1);
 		else
-		{
-			buf[idx++] = (char)c;
-			if (idx == (int)sizeof(buf))
-				flush_buf(buf, &idx);
-		}
-		c = 0;
-		bit = 0;
+			write(1, &c, 1);
+		index = 0;
 	}
 	kill(info->si_pid, SIGUSR1);
 }
 
-static void	setup_signals(void)
+static void	init_server(void)
 {
 	struct sigaction	sa;
 
-	sa.sa_sigaction = handle_signal;
 	sigemptyset(&sa.sa_mask);
-	sigaddset(&sa.sa_mask, SIGUSR1);
-	sigaddset(&sa.sa_mask, SIGUSR2);
-	sa.sa_flags = SA_SIGINFO | SA_RESTART;
-	if (sigaction(SIGUSR1, &sa, NULL) == -1)
-		write(2, "sigaction SIGUSR1 failed\n", 25);
-	if (sigaction(SIGUSR2, &sa, NULL) == -1)
-		write(2, "sigaction SIGUSR2 failed\n", 25);
+	sa.sa_sigaction = handler;
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGUSR2, &sa, NULL);
 }
 
 int	main(void)
@@ -81,10 +67,10 @@ int	main(void)
 	int	pid;
 
 	pid = getpid();
-	write(1, "PID: ", 5);
+	write(1, "PID : ", 6);
 	ft_putnbr(pid);
 	write(1, "\n", 1);
-	setup_signals();
+	init_server();
 	while (1)
 		pause();
 	return (0);
