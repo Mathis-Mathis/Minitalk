@@ -6,7 +6,7 @@
 /*   By: mmousli <mmousli@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 09:36:12 by mmousli           #+#    #+#             */
-/*   Updated: 2026/02/17 16:38:32 by mmousli          ###   ########.fr       */
+/*   Updated: 2026/02/17 16:40:50 by mmousli          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@ static void	ack_handler(int signum)
 	if (signum == SIGUSR1)
 		g_ack = 1;
 }
-
 
 static void	init_client(void)
 {
