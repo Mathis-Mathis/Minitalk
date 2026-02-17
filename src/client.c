@@ -6,7 +6,7 @@
 /*   By: mmousli <mmousli@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 09:36:12 by mmousli           #+#    #+#             */
-/*   Updated: 2026/02/10 14:01:18 by mmousli          ###   ########.fr       */
+/*   Updated: 2026/02/17 16:38:32 by mmousli          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,12 @@
 
 static volatile sig_atomic_t	g_ack = 0;
 
-static void	ack_handler(int x)
+static void	ack_handler(int signum)
 {
-	(void)x;
-	g_ack = 1;
+	if (signum == SIGUSR1)
+		g_ack = 1;
 }
+
 
 static void	init_client(void)
 {
